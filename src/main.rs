@@ -9,6 +9,7 @@
 extern crate colodot;
 
 mod li;
+mod parser;
 
 fn main() {
     li::li();

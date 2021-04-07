@@ -32,11 +32,12 @@
 // }
 
 use colodot::dot::{DotColors, DotTypes};
+use crate::parser;
 
 // TODO: Create 'match file' to
 // support another file extension.
 //
-pub fn match_content(directory: &String) {
+pub fn match_content(directory: &String, data: &mut parser::Data) {
     if std::fs::metadata(directory).unwrap().is_dir() {
         colodot!(DotColors::LightBlue, DotTypes::Bold,
                 "[Direc]:     ");
@@ -59,13 +60,17 @@ pub fn match_content(directory: &String) {
                 "[CMake]:     ");
         },
         _ => {
-            let extension = std::path::Path::new(directory).extension();
-
-            if extension == None {
+            if std::path::Path::new(directory).extension() == None {
                 return;
             }
 
-            match std::ffi::OsStr::to_str(extension.unwrap()).unwrap() {
+            let extension = std::ffi::OsStr::to_str(
+                std::path::Path::new(directory)
+                    .extension()
+                    .unwrap())
+                .unwrap();
+
+            match extension {
                 "scrift_log"      => {
                     colodot!(DotColors::Yellow, DotTypes::Bold,
                         "FeLog*:      ");
@@ -155,8 +160,10 @@ pub fn match_content(directory: &String) {
                         "[incLink]:   ");
                 },
                 _ => {
-                    colodot!(DotColors::Yellow, DotTypes::Bold,
-                        "[File]:      ");
+                    let info = data.get(extension.to_string());
+
+                    colodot!(info.1, DotTypes::Bold,
+                        &info.0);
                 }
             }
         }
@@ -170,10 +177,13 @@ pub fn match_content(directory: &String) {
 
 pub fn li() {
     let paths = std::fs::read_dir(".").unwrap();
+    let mut data: parser::Data = parser::Data{everything: Vec::new()};
+
+    data.read_data();
 
     for path in paths {
         let lol = path.unwrap().file_name().to_str().unwrap().to_string();
 
-        match_content(&lol);
+        match_content(&lol, &mut data);
     }
 }
